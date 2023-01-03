@@ -1,0 +1,26 @@
+body {
+    max-width: 100ch;
+    padding: 2ch;
+    margin: auto;
+    background-color: black;
+    color: white;
+    font-family: "comic sans ms", sans-serif;
+    font-size: large;
+}
+
+a:link {
+    color: skyblue;
+}
+
+a:visited {
+    color: gray;
+}
+
+td, th {
+    border: 1px solid;
+    padding: 1ch;
+}
+
+table {
+    border-collapse: collapse;
+}
