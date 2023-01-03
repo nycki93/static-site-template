@@ -8,7 +8,7 @@ async function main() {
         '<!DOCTYPE html>',
         '<html>',
         '<body>',
-        md.render(body_md),
+        md.render(body_md).trimEnd(),
         '</body>',
         '</html>',    
     ].join('\n'));
