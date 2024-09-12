@@ -5,23 +5,24 @@ const plugins = {
     echo: (str) => str,
 }
 
-function pluginEval(plugins, toEval) {
+function makePluginEval(plugins) {
     const code = [];
     for (const k of Object.keys(plugins)) {
         code.push(`var ${k} = this.${k};`);
     }
-    code.push(`return eval(str);`);
-    const fn = new Function('str', code.join('\n'));
-    return fn.call(plugins, toEval);
+    code.push(`return (str) => eval(str);`);
+    const fn = new Function(code.join('\n'));
+    return fn.call(plugins);
 }
 
 function renderPlugins(body) {
+    const pluginEval = makePluginEval(plugins);
     const matches = body.matchAll(/{{(.*?)}}/g);
     const literals = body.split(/{{.*?}}/);
     const newBody = [];
     for (const m of matches) {
         newBody.push(literals.shift());
-        newBody.push(pluginEval(plugins, m[1]));
+        newBody.push(pluginEval(m[1]));
     }
     newBody.push(literals.shift());
     return newBody.join('');
