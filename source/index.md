@@ -1,4 +1,4 @@
-# {{ echo('hello world!') }}
+# {{ greet('world') }}
 
 *italics*
 
