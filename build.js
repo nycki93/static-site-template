@@ -1,25 +1,30 @@
 const fs = require('node:fs');
 const md = require('markdown-it')();
-const ejs = require('ejs');
 
-function unescapeHtml(text) {
-    return (text
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-    );
+const plugins = {
+    echo: (str) => str,
 }
 
-function renderMarkdown(filename) {
-    let body = fs.readFileSync(`${__dirname}/source/${filename}`, 'utf-8');
-    body = md.render(body).trimEnd();
-    body = unescapeHtml(body);
-    const match = body.match(/^<p>(.*)<\/p>$/);
-    if (match) {
-        body = match[1];
+function pluginEval(plugins, toEval) {
+    const code = [];
+    for (const k of Object.keys(plugins)) {
+        code.push(`var ${k} = this.${k};`);
     }
-    body = ejs.render(body);
-    return body;
+    code.push(`return eval(str);`);
+    const fn = new Function('str', code.join('\n'));
+    return fn.call(plugins, toEval);
+}
+
+function renderPlugins(body) {
+    const matches = body.matchAll(/{{(.*?)}}/g);
+    const literals = body.split(/{{.*?}}/);
+    const newBody = [];
+    for (const m of matches) {
+        newBody.push(literals.shift());
+        newBody.push(pluginEval(plugins, m[1]));
+    }
+    newBody.push(literals.shift());
+    return newBody.join('');
 }
 
 function main() {
@@ -27,6 +32,7 @@ function main() {
 
     // index.html
     body = fs.readFileSync('source/index.md', 'utf-8');
+    body = renderPlugins(body);
     body = [
         '<!DOCTYPE html><html><head>',
         '<title>Website Name</title>',
@@ -35,8 +41,6 @@ function main() {
         md.render(body).trimEnd(),
         '</body></html>',    
     ].join('\n');
-    body = unescapeHtml(body);
-    body = ejs.render(body, { renderMarkdown });
     fs.writeFileSync('site/index.html', body);
 
     // style.css
