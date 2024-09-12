@@ -1,32 +1,6 @@
 const fs = require('node:fs');
 const md = require('markdown-it')();
-
-const plugins = {
-    greet: (str) => `hello, ${str}!`,
-}
-
-function makePluginEval(plugins) {
-    const code = [];
-    for (const k of Object.keys(plugins)) {
-        code.push(`var ${k} = this.${k};`);
-    }
-    code.push(`return (str) => eval(str);`);
-    const fn = new Function(code.join('\n'));
-    return fn.call(plugins);
-}
-
-function renderPlugins(str) {
-    const pluginEval = makePluginEval(plugins);
-    const matches = str.matchAll(/{{(.*?)}}/g);
-    const literals = str.split(/{{.*?}}/);
-    const newBody = [];
-    for (const m of matches) {
-        newBody.push(literals.shift());
-        newBody.push(pluginEval(m[1]));
-    }
-    newBody.push(literals.shift());
-    return newBody.join('');
-}
+const ejs = require('ejs');
 
 function renderMarkdown(str) {
     return [
@@ -39,19 +13,18 @@ function renderMarkdown(str) {
     ].join('\n');
 }
 
-function main() {
+async function main() {
     fs.mkdirSync('site', { recursive: true });
 
     // TODO: add some sort of file discovery here
 
     // index.md
-    let str = fs.readFileSync('source/index.md', 'utf-8');
-    str = renderPlugins(str);
+    let str = await ejs.renderFile('site-source/index.md');
     str = renderMarkdown(str);
     fs.writeFileSync('site/index.html', str);
 
     // style.css
-    fs.copyFileSync('source/style.css', 'site/style.css');
+    fs.copyFileSync('site-source/style.css', 'site/style.css');
 }
 
 main();
