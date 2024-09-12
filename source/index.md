@@ -1,4 +1,4 @@
-# <%= renderMarkdown('_header.md') %>
+# {{ greet('world') }}
 
 *italics*
 

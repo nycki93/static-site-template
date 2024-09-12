@@ -1,43 +1,54 @@
 const fs = require('node:fs');
 const md = require('markdown-it')();
-const ejs = require('ejs');
 
-function unescapeHtml(text) {
-    return (text
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-    );
+const plugins = {
+    greet: (str) => `hello, ${str}!`,
 }
 
-function renderMarkdown(filename) {
-    let body = fs.readFileSync(`${__dirname}/source/${filename}`, 'utf-8');
-    body = md.render(body).trimEnd();
-    body = unescapeHtml(body);
-    const match = body.match(/^<p>(.*)<\/p>$/);
-    if (match) {
-        body = match[1];
+function makePluginEval(plugins) {
+    const code = [];
+    for (const k of Object.keys(plugins)) {
+        code.push(`var ${k} = this.${k};`);
     }
-    body = ejs.render(body);
-    return body;
+    code.push(`return (str) => eval(str);`);
+    const fn = new Function(code.join('\n'));
+    return fn.call(plugins);
+}
+
+function renderPlugins(str) {
+    const pluginEval = makePluginEval(plugins);
+    const matches = str.matchAll(/{{(.*?)}}/g);
+    const literals = str.split(/{{.*?}}/);
+    const newBody = [];
+    for (const m of matches) {
+        newBody.push(literals.shift());
+        newBody.push(pluginEval(m[1]));
+    }
+    newBody.push(literals.shift());
+    return newBody.join('');
+}
+
+function renderMarkdown(str) {
+    return [
+        '<!DOCTYPE html><html><head>',
+        '<title>Website Name</title>',
+        '<link rel="stylesheet" href="style.css">',
+        '</head><body>',
+        md.render(str).trimEnd(),
+        '</body></html>',    
+    ].join('\n');
 }
 
 function main() {
     fs.mkdirSync('site', { recursive: true });
 
-    // index.html
-    body = fs.readFileSync('source/index.md', 'utf-8');
-    body = [
-        '<!DOCTYPE html><html><head>',
-        '<title>Website Name</title>',
-        '<link rel="stylesheet" href="style.css">',
-        '</head><body>',
-        md.render(body).trimEnd(),
-        '</body></html>',    
-    ].join('\n');
-    body = unescapeHtml(body);
-    body = ejs.render(body, { renderMarkdown });
-    fs.writeFileSync('site/index.html', body);
+    // TODO: add some sort of file discovery here
+
+    // index.md
+    let str = fs.readFileSync('source/index.md', 'utf-8');
+    str = renderPlugins(str);
+    str = renderMarkdown(str);
+    fs.writeFileSync('site/index.html', str);
 
     // style.css
     fs.copyFileSync('source/style.css', 'site/style.css');
