@@ -1,14 +1,16 @@
 const fs = require('node:fs');
 const md = require('markdown-it')();
 const ejs = require('ejs');
+const yfm = require('yaml-front-matter');
 
 function renderMarkdown(str) {
+    const data = yfm.loadFront(str);
     return [
         '<!DOCTYPE html><html><head>',
-        '<title>Website Name</title>',
+        `<title>${data.title}</title>`,
         '<link rel="stylesheet" href="style.css">',
         '</head><body>',
-        md.render(str).trimEnd(),
+        md.render(data.__content).trimEnd(),
         '</body></html>',    
     ].join('\n');
 }

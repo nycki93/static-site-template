@@ -1,4 +1,7 @@
-<%- include('templates/header.md') %>
+---
+title: Hello World!
+---
+<%- include('_header.md') %>
 
 *italics*
 
