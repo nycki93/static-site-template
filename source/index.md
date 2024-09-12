@@ -1,4 +1,4 @@
-# {{ greet('world') }}
+<%- include('header.md') %>
 
 *italics*
 
