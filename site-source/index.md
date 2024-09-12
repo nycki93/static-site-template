@@ -1,4 +1,4 @@
-<%- include('header.md') %>
+<%- include('templates/header.md') %>
 
 *italics*
 

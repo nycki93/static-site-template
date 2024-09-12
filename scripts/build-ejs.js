@@ -19,13 +19,13 @@ function main() {
     // TODO: add some sort of file discovery here
 
     // index.md
-    let str = fs.readFileSync('source/index.md', 'utf-8');
-    str = ejs.render(str, null, { filename: 'source/index.md' });
+    let str = fs.readFileSync('site-source/index.md', 'utf-8');
+    str = ejs.render(str, null, { filename: 'site-source/index.md' });
     str = renderMarkdown(str);
     fs.writeFileSync('site/index.html', str);
 
     // style.css
-    fs.copyFileSync('source/style.css', 'site/style.css');
+    fs.copyFileSync('site-source/style.css', 'site/style.css');
 }
 
 main();
